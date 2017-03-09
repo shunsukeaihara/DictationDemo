@@ -1,13 +1,17 @@
 package jp.argmax.dictationdemo;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -16,7 +20,7 @@ import java.util.ArrayList;
 
 import icepick.Icepick;
 import icepick.State;
-import jp.argmax.dictationdemo.recorder.MicRecordingService;
+import jp.argmax.dictationdemo.recorder.MicRecordingASRService;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -28,6 +32,9 @@ public class MainActivity extends AppCompatActivity {
     @State
     ArrayList<String> mASRResultList = new ArrayList<>();
     private ArrayAdapter<String> mArrayAdapter;
+
+    private IntentFilter intentFilter;
+    private BroadcastReceiver recv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +57,11 @@ public class MainActivity extends AppCompatActivity {
             addClickListener();
         }
 
-    }
+        intentFilter = new IntentFilter();
+        intentFilter.addAction("SEND_ASR_RESULT");
+        recv = new ASRResultReceiver();
+        registerReceiver(recv, intentFilter);
+     }
 
     private void addClickListener(){
         //buttonを取得
@@ -61,12 +72,12 @@ public class MainActivity extends AppCompatActivity {
                 // 停止
                 mButtonText = "start";
                 mArrayAdapter.insert("stop", 0);
-                stopService(new Intent(MainActivity.this, MicRecordingService.class));
+                stopService(new Intent(MainActivity.this, MicRecordingASRService.class));
             }else{
                 // 開始
                 mButtonText = "stop";
                 mArrayAdapter.insert("start", 0);
-                startService(new Intent(MainActivity.this, MicRecordingService.class));
+                startService(new Intent(MainActivity.this, MicRecordingASRService.class));
 
             }
             ((Button)view).setText(mButtonText);
@@ -86,9 +97,20 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case 1:
-                addClickListener();
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    addClickListener();
+                }
         }
     }
 
+
+    private class ASRResultReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle bundle = intent.getExtras();
+            String message = bundle.getString("ASR_RESULT");
+            mArrayAdapter.insert(message, 0);
+        }
+    }
 
 }

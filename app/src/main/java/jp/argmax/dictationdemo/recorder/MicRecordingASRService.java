@@ -10,8 +10,9 @@ import android.widget.Toast;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import jp.argmax.dictationdemo.MainActivity;
 
-public class MicRecordingService extends Service {
+public class MicRecordingASRService extends Service {
 
     private RecorderOnSubscrib recorder;
     private final Context context = this;
@@ -54,6 +55,11 @@ public class MicRecordingService extends Service {
 
     private void asr(byte[] utterance) {
         go.post(() -> Toast.makeText(context, "utterance", Toast.LENGTH_LONG).show());
+
+        Intent i = new Intent();
+        i.putExtra("ASR_RESULT", "utterance");
+        i.setAction("SEND_ASR_RESULT");
+        getBaseContext().sendBroadcast(i);
     }
 
     private void asrError(Throwable e){

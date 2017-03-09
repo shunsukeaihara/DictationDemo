@@ -23,7 +23,7 @@ class UtteranceChunker {
 
 
     private static final int FRONT_BUFFER_LENGTH = 5;
-    private static final int NO_SPEECH_COUNT_THRESHOLD = 50;
+    private static final int NO_SPEECH_COUNT_THRESHOLD = 20;
 
 
     private ArrayDeque<byte[]> frontBuffer;

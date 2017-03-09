@@ -21,7 +21,7 @@
         </activity>
 
         <service
-            android:name=".recorder.MicRecordingService"
+            android:name=".recorder.MicRecordingASRService"
             android:enabled="true"
             android:exported="false"/>
     </application>
