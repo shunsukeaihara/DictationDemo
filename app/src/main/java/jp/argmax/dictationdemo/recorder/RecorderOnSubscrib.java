@@ -84,6 +84,7 @@ class RecorderOnSubscrib implements ObservableOnSubscribe<byte[]> {
     }
 
     private boolean isSpeech(short[] window){
+        // 要検討
         double db = calcPower(window);
         int zc = calcZeroCross(window);
         return zc > zcThreshold && db > dbThreshold;
