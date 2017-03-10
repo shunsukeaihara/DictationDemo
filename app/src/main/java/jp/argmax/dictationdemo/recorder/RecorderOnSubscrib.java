@@ -26,14 +26,13 @@ class RecorderOnSubscrib implements ObservableOnSubscribe<byte[]> {
     private static final double dbThreshold = -30.0;
     private static final int zcThreshold = 100;
 
-    private ArrayBlockingQueue<Integer> comunitate;
+    private final Object mLock = new Object();
 
     @Override
     public void subscribe(ObservableEmitter<byte[]> e) throws Exception {
         utteranceEmitter = e;
         if(!isRecording) {
             isRecording = true;
-            comunitate = new ArrayBlockingQueue<>(1);
             recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
                     16000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, windowsize * 2 * 3);
             recorder.startRecording();
@@ -41,18 +40,21 @@ class RecorderOnSubscrib implements ObservableOnSubscribe<byte[]> {
         }
     }
 
-    void stop(){
-        if(recorder.getState() == AudioRecord.STATE_INITIALIZED) {
-            recorder.stop();
-            try {
-                comunitate.take();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                // ...
+    void stop() {
+        synchronized (mLock) {
+            if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+                if (recorder.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
+                    recorder.stop();
+                    try {
+                        mLock.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                recorder.release();
             }
-            recorder.release();
+            utteranceEmitter.onComplete();
         }
-        utteranceEmitter.onComplete();
     }
 
     private void run() {
@@ -80,7 +82,7 @@ class RecorderOnSubscrib implements ObservableOnSubscribe<byte[]> {
                 ut.Add(ba, isSpeech);
             }
         }
-        comunitate.add(0);
+        mLock.notifyAll();
     }
 
     private boolean isSpeech(short[] window){
