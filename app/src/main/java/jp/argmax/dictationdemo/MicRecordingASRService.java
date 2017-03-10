@@ -1,4 +1,4 @@
-package jp.argmax.dictationdemo.recorder;
+package jp.argmax.dictationdemo;
 
 import android.app.Service;
 import android.content.Context;
@@ -9,33 +9,26 @@ import android.util.Log;
 import android.widget.Toast;
 
 import io.reactivex.Observable;
-import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
-import jp.argmax.dictationdemo.R;
-import jp.argmax.dictationdemo.ndev.NdevAsrInterface;
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import jp.argmax.dictationdemo.ndev.ASRClient;
+import jp.argmax.dictationdemo.recorder.RecorderOnSubscrib;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
-import retrofit2.Retrofit;
 
 public class MicRecordingASRService extends Service {
 
     private RecorderOnSubscrib recorder;
     private final Context context = this;
     private final Handler go = new Handler();
-    private Retrofit retrofit;
+    private ASRClient client;
 
     @Override
     public void onCreate() {
         super.onCreate();
         recorder = new RecorderOnSubscrib();
-        retrofit = new Retrofit.Builder()
-                .baseUrl(NdevAsrInterface.END_POINT).build();
-
+        client = new ASRClient(getString(R.string.NDEV_APP_ID), getString(R.string.NDEV_APP_KEY));
     }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -69,11 +62,7 @@ public class MicRecordingASRService extends Service {
     private void asr(byte[] utterance) {
         go.post(() -> Toast.makeText(context, "utterance", Toast.LENGTH_LONG).show());
 
-        // 別クラスに切り出し？
-        RequestBody rb = RequestBody.create(MediaType.parse("audio/x-wav;codec=pcm;bit=16;rate=16000"), utterance);
-        NdevAsrInterface nai = retrofit.create(NdevAsrInterface.class);
-        Call<ResponseBody> call = nai.requestASR(getString(R.string.NDEV_APP_ID), getString(R.string.NDEV_APP_KEY), "jeijfiuhe8we98", rb);
-        call.enqueue(new Callback<ResponseBody>() {
+        client.Call(utterance, new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
 
@@ -96,7 +85,6 @@ public class MicRecordingASRService extends Service {
                 Log.d(this.getClass().toString(), "http error");
             }
         });
-
     }
 
     private void asrError(Throwable e){

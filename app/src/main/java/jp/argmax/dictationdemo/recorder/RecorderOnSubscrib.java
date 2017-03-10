@@ -7,7 +7,6 @@ import android.media.MediaRecorder;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
-import java.util.concurrent.ArrayBlockingQueue;
 
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -16,7 +15,7 @@ import io.reactivex.ObservableOnSubscribe;
  * Created by aihara on 2017/03/09.
  */
 
-class RecorderOnSubscrib implements ObservableOnSubscribe<byte[]> {
+public class RecorderOnSubscrib implements ObservableOnSubscribe<byte[]> {
 
     private ObservableEmitter<byte[]> utteranceEmitter;
     private boolean isRecording = false;
@@ -40,7 +39,7 @@ class RecorderOnSubscrib implements ObservableOnSubscribe<byte[]> {
         }
     }
 
-    void stop() {
+    public void stop() {
         synchronized (mLock) {
             if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
                 if (recorder.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
